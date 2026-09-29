@@ -8,7 +8,7 @@
 Doc va review:
 
 ~~~text
-00-tong-quan/kien-truc-tong-the.md
+00-tong-quan/kien-truc-tong-the-v2.md
 ~~~
 
 Can hieu:
@@ -21,7 +21,7 @@ Can hieu:
 ### Query Pipeline — luong hoi-dap
 
 ~~~text
-01-luong-hoi-dap/luong-xu-ly-cau-hoi.md
+01-luong-hoi-dap/luong-xu-ly-cau-hoi-v2.md
 ~~~
 
 Can hieu tu:
@@ -30,7 +30,7 @@ User Message → Conversation → QueryPlan → Retrieval → Evidence → Answe
 ### Knowledge Pipeline — luong nap tri thuc
 
 ~~~text
-02-luong-nap-tri-thuc/luong-nap-va-danh-chi-muc.md
+02-luong-nap-tri-thuc/luong-nap-va-danh-chi-muc-v2.md
 ~~~
 
 Can hieu tu:
@@ -44,11 +44,10 @@ Vi du Query Pipeline:
 
 ~~~text
 01-luong-hoi-dap/
-├── conversation-engine.md
-├── query-understanding.md
-├── routing-query-plan.md
-├── retrieval-engine.md
-└── evidence-answering.md
+├── conversation-engine-v1.md
+├── routing-query-plan-v1.md
+├── retrieval-engine-v1.md
+└── evidence-answering-v1.md
 ~~~
 
 Knowledge Pipeline:
