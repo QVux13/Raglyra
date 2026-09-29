@@ -8,7 +8,7 @@ Folder này chứa những chức năng **không thuộc riêng Query Pipeline h
 ## 1. File hiện tại
 
 ~~~text
-pham-vi-du-lieu-va-bao-mat.md
+pham-vi-du-lieu-va-bao-mat-v2.md
 ~~~
 
 File này chốt:
