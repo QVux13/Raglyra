@@ -547,7 +547,7 @@ Source
 → Index
 ~~~
 
-Chi tiết nằm ở `docs/01-flows/02-ingestion-indexing-flow.md`.
+Chi tiết nằm ở `docs/02-luong-nap-tri-thuc/luong-nap-va-danh-chi-muc-v2.md`.
 
 ## 21. Storage Layer
 
