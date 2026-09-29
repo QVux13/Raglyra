@@ -14,7 +14,8 @@ flowchart TD
     B --> C[Load Conversation Context]
     C --> D[Resolve Reference / Clarification]
     D --> E[Build Standalone Query]
-    E --> F[Query Understanding]
+    E --> SG[Intent & Scope Guard]
+    SG --> F[Query Understanding]
     F --> G[Entity Resolution]
     G --> H[Capability Resolution]
     H --> I[Build QueryPlan]
@@ -178,7 +179,134 @@ Rewrite phải preserve:
 - hai phía so sánh;
 - constraint user đã nói.
 
-## 9. Bước 5 — Query Understanding
+## 9. Bước 5 — Intent & Scope Guard
+
+**Intent & Scope Guard** = cong kiem tra y dinh va pham vi truoc khi he thong duoc phep chon capability/source.
+
+Muc tieu cua buoc nay:
+
+~~~text
+1. Cau hoi co nam trong domain assistant duoc phep?
+2. Intent nay co duoc ho tro?
+3. Topic nay co nam trong taxonomy?
+4. User/assistant co duoc dung capability can thiet?
+5. Query co dang co gang mo rong source khong?
+6. Query co yeu cau data ngoai tenant/dataset khong?
+~~~
+
+Cac ket qua co the:
+
+~~~text
+ALLOWED
+CLARIFY
+OUT_OF_SCOPE
+UNSUPPORTED
+FORBIDDEN
+~~~
+
+### Vi sao buoc nay nam truoc source selection?
+
+Vi neu de LLM/router chon source truoc, query mo ho co the dan toi:
+
+~~~text
+"tim them du lieu"
+→ search tat ca dataset
+→ cham tai lieu ngoai pham vi
+~~~
+
+Target cua Raglyra la:
+
+~~~text
+Intent
+→ Scope Check
+→ Capability Requirement
+→ Allowed Capability
+→ Allowed Source
+~~~
+
+Khong:
+
+~~~text
+Intent
+→ LLM tu chon source
+~~~
+
+### Scope khong chi la tenant
+
+Scope gom:
+
+~~~text
+Tenant Scope
+Workspace Scope
+Assistant Scope
+Dataset Scope
+Source Scope
+Capability Scope
+Action Scope
+~~~
+
+Vi du:
+
+~~~text
+Assistant Sales
+allowed:
+- Product KB
+- Pricing API
+- Refund Policy
+
+not allowed:
+- HR
+- Admin documents
+- another tenant
+~~~
+
+Neu user hoi:
+
+~~~text
+"Cho toi tai lieu HR noi bo"
+~~~
+
+thi:
+
+~~~text
+OUT_OF_SCOPE
+→ no retrieval
+~~~
+
+Khong duoc:
+
+~~~text
+semantic search toan tenant
+→ thay document HR
+→ tra loi
+~~~
+
+### Intent taxonomy
+
+Danh sach intent core:
+
+~~~text
+CONVERSATIONAL
+KNOWLEDGE_QA
+STRUCTURED_LOOKUP
+EXACT_LOOKUP
+COMPARE
+SUMMARIZE
+MULTI_INTENT
+CLARIFICATION_RESPONSE
+OUT_OF_SCOPE
+UNSUPPORTED
+~~~
+
+Chi tiet tung intent, allowed data va routing matrix nam tai:
+
+~~~text
+docs/01-luong-hoi-dap/intent-va-pham-vi-cau-hoi.md
+~~~
+
+---
+
+## 10. Bước 6 — Query Understanding
 
 Query Understanding phân tích Standalone Query thành semantic fields.
 
@@ -192,7 +320,7 @@ freshness = CURRENT
 ambiguity = false
 ~~~
 
-## 10. Task Type
+## 11. Task Type
 
 **Task Type** = loại công việc hệ thống cần làm.
 
@@ -211,7 +339,7 @@ OUT_OF_SCOPE
 
 Task generic, không phụ thuộc một ngành cụ thể.
 
-## 11. Topic
+## 12. Topic
 
 **Topic** = chủ đề nghiệp vụ.
 
@@ -227,7 +355,7 @@ CONTRACT
 
 Task và Topic phải tách.
 
-## 12. Freshness
+## 13. Freshness
 
 **Freshness** = mức độ mới của dữ liệu mà query yêu cầu.
 
@@ -248,7 +376,7 @@ Ví dụ:
 
 Freshness ảnh hưởng trực tiếp việc chọn source.
 
-## 13. Bước 6 — Entity Resolution
+## 14. Bước 7 — Entity Resolution
 
 **Entity Extraction** = nhận ra text nào là entity.
 
@@ -272,7 +400,7 @@ exact ID
 → clarify
 ~~~
 
-## 14. Bước 7 — Capability Resolution
+## 15. Bước 8 — Capability Resolution
 
 **Capability** = khả năng hệ thống có để xử lý một loại nhu cầu.
 
@@ -293,7 +421,7 @@ Capability = cần khả năng gì
 Source = implementation nào cung cấp khả năng đó
 ~~~
 
-## 15. Source Binding
+## 16. Source Binding
 
 Ví dụ:
 
@@ -307,7 +435,7 @@ POLICY_KNOWLEDGE
 
 LLM không tự chọn arbitrary source ID.
 
-## 16. Bước 8 — QueryPlan
+## 17. Bước 9 — QueryPlan
 
 **QueryPlan** = kế hoạch máy có thể thực thi.
 
@@ -323,13 +451,13 @@ MULTI_PLAN
 NO_ANSWER
 ~~~
 
-## 17. DIRECT
+## 18. DIRECT
 
 Dùng cho greeting/acknowledgement/static help.
 
 Không retrieval.
 
-## 18. CLARIFY
+## 19. CLARIFY
 
 Dùng khi thiếu thông tin user có thể bổ sung.
 
@@ -343,7 +471,7 @@ nhưng không biết product nào.
 
 Không vector search để đoán.
 
-## 19. STRUCTURED_SOURCE
+## 20. STRUCTURED_SOURCE
 
 Dùng khi có source typed/current phù hợp.
 
@@ -357,7 +485,7 @@ customer status
 
 Structured result có thể trả trực tiếp bằng deterministic formatter.
 
-## 20. EXACT_SEARCH
+## 21. EXACT_SEARCH
 
 Dùng cho identifier:
 
@@ -370,7 +498,7 @@ contract code
 
 Exact/lexical-first thường phù hợp hơn dense-first.
 
-## 21. RAG Plan
+## 22. RAG Plan
 
 Dùng khi cần retrieve knowledge.
 
@@ -386,7 +514,7 @@ scope
 
 Routing không nên nhét chi tiết dense_top_k/reranker model vào QueryPlan nếu các chi tiết đó thuộc RetrievalProfile.
 
-## 22. MULTI_PLAN
+## 23. MULTI_PLAN
 
 Ví dụ:
 
@@ -406,7 +534,7 @@ SubPlan B
 
 MultiPlan phải có execution budget để tránh chạy vô hạn.
 
-## 23. NO_ANSWER
+## 24. NO_ANSWER
 
 Dùng khi:
 - không có capability;
@@ -417,7 +545,7 @@ Dùng khi:
 
 Không ép LLM bịa.
 
-## 24. Bước 9 — Retrieval
+## 25. Bước 10 — Retrieval
 
 Nếu plan là RAG:
 
@@ -436,11 +564,11 @@ Reranker
 Evidence Selection
 ~~~
 
-## 25. Exact Retrieval
+## 26. Exact Retrieval
 
 Tìm chính xác identifier, code, canonical name.
 
-## 26. Lexical Retrieval
+## 27. Lexical Retrieval
 
 **Lexical Retrieval** = tìm theo từ khóa/toàn văn.
 
@@ -451,19 +579,19 @@ Mạnh với:
 - exact phrase;
 - keyword hiếm.
 
-## 27. Dense Retrieval
+## 28. Dense Retrieval
 
 **Dense Retrieval** = semantic search bằng embedding vector.
 
 Mạnh với paraphrase và các câu khác chữ nhưng cùng nghĩa.
 
-## 28. Hybrid Retrieval
+## 29. Hybrid Retrieval
 
 **Hybrid Retrieval** = kết hợp nhiều lane retrieval rồi fusion.
 
 Không phải query nào cũng cần Hybrid.
 
-## 29. Candidate
+## 30. Candidate
 
 **Candidate** = kết quả retrieval tạm thời.
 
@@ -481,7 +609,7 @@ freshness
 provenance
 ~~~
 
-## 30. Fusion
+## 31. Fusion
 
 **Fusion** = gộp nhiều ranking.
 
@@ -489,7 +617,7 @@ Không cộng raw cosine + BM25 score tùy tiện.
 
 RRF là baseline phù hợp để bắt đầu benchmark.
 
-## 31. Reranker
+## 32. Reranker
 
 **Reranker** = mô hình chấm lại candidate để tăng precision.
 
@@ -499,7 +627,7 @@ RRF là baseline phù hợp để bắt đầu benchmark.
 → top candidates
 ~~~
 
-## 32. Evidence Selection
+## 34. Evidence Selection
 
 Không chỉ lấy top-K.
 
@@ -528,7 +656,7 @@ page = 12
 section = Refund
 ~~~
 
-## 34. Bước 10 — Evidence Gate
+## 35. Bước 11 — Evidence Gate
 
 Kiểm:
 
@@ -545,7 +673,7 @@ no-match hay negative fact?
 
 No-match không đồng nghĩa dữ liệu không tồn tại.
 
-## 35. Bước 11 — Answer Strategy
+## 36. Bước 12 — Answer Strategy
 
 ### Deterministic
 Code format typed data.
@@ -556,7 +684,7 @@ Lấy gần trực tiếp từ evidence.
 ### Grounded Synthesis
 LLM tổng hợp evidence nhưng không được vượt evidence.
 
-## 36. Bước 12 — Grounding Validation
+## 37. Bước 13 — Grounding Validation
 
 Kiểm các factual claim quan trọng:
 - số;
@@ -568,13 +696,13 @@ Kiểm các factual claim quan trọng:
 
 Nếu critical claim unsupported thì fallback hoặc NO_ANSWER/PARTIAL.
 
-## 37. Bước 13 — Citation
+## 38. Bước 14 — Citation
 
 Citation được build từ Evidence provenance.
 
 LLM có thể dùng Evidence ID nội bộ nhưng public citation do server tạo.
 
-## 38. Bước 14 — Conversation State Update
+## 39. Bước 15 — Conversation State Update
 
 Sau response cập nhật interaction state:
 
@@ -587,7 +715,7 @@ user constraints
 
 Không lấy unsupported LLM claim ghi thành state/fact.
 
-## 39. Case hoàn chỉnh — Follow-up Price
+## 40. Case hoàn chỉnh — Follow-up Price
 
 ~~~text
 User: VPS Basic có gì?
@@ -613,7 +741,7 @@ typed result
 deterministic answer
 ~~~
 
-## 40. Case hoàn chỉnh — Policy
+## 41. Case hoàn chỉnh — Policy
 
 ~~~text
 User: Nếu tôi không dùng VPS nữa thì có được hoàn tiền không?
@@ -639,7 +767,7 @@ grounded answer
 citation
 ~~~
 
-## 41. Case hoàn chỉnh — Multi-intent
+## 42. Case hoàn chỉnh — Multi-intent
 
 ~~~text
 User: VPS Basic giá bao nhiêu và nếu không hợp thì có hoàn tiền không?
@@ -657,7 +785,7 @@ grounded synthesis
 citations
 ~~~
 
-## 42. Error / Edge Cases
+## 43. Error / Edge Cases
 
 ### Conversation ambiguous
 → CLARIFY.
@@ -674,13 +802,14 @@ citations
 ### Generation invalid
 → bounded fallback, không retry vô hạn.
 
-## 43. Trách nhiệm component
+## 44. Trách nhiệm component
 
 | Component | Trách nhiệm |
 |---|---|
 | Security Resolver | resolve allowed scope |
 | Conversation Engine | hiểu multi-turn context |
 | Reference Resolver | resolve pronoun/ellipsis |
+| Intent & Scope Guard | chặn query vượt domain/data/capability được phép |
 | Query Understanding | task/topic/freshness |
 | Entity Resolver | canonical entity |
 | Capability Resolver | tìm capability phù hợp |
@@ -696,7 +825,7 @@ citations
 | Citation Builder | tạo citation |
 | Conversation State Manager | cập nhật state |
 
-## 44. File này không mô tả
+## 45. File này không mô tả
 
 - parser/chunking chi tiết;
 - DB schema;
@@ -705,22 +834,24 @@ citations
 - UI;
 - deployment.
 
-## 45. Design Decisions
+## 46. Design Decisions
 
 1. Conversation resolution trước routing/retrieval.
-2. Query Understanding trả semantic fields.
-3. Entity Resolution tách riêng.
-4. Capability khác Source.
-5. QueryPlan là contract execution.
-6. Current typed data ưu tiên structured source.
-7. Retrieval không tự route lại.
-8. Candidate khác Evidence.
-9. Evidence Gate trước generation.
-10. No-match khác negative fact.
-11. Citation server-side.
-12. Conversation state không phải Knowledge Base.
+2. Intent & Scope Guard chặn query vượt phạm vi trước source selection.
+3. Query Understanding trả semantic fields.
+4. Entity Resolution tách riêng.
+5. Capability khác Source.
+6. QueryPlan là contract execution.
+7. Current typed data ưu tiên structured source.
+8. Retrieval không tự route lại.
+9. Candidate khác Evidence.
+10. Evidence Gate trước generation.
+11. No-match khác negative fact.
+12. Citation server-side.
+13. Conversation state không phải Knowledge Base.
+14. Source failure không được tự mở rộng search scope.
 
-## 46. Open Questions
+## 47. Open Questions
 
 - exact ConversationState schema;
 - Query Understanding model;
@@ -732,10 +863,14 @@ citations
 - exact QueryPlan DTO;
 - cache/retry/timeouts.
 
-## 47. Review Checklist
+## 48. Review Checklist
 
 - [ ] Hiểu flow từ message tới response.
 - [ ] Đồng ý Conversation-first.
+- [ ] Đồng ý Intent/Topic/Capability/Source là bốn khái niệm khác nhau.
+- [ ] Đồng ý OUT_OF_SCOPE/UNSUPPORTED không retrieval.
+- [ ] Đồng ý query mơ hồ quan trọng phải CLARIFY thay vì semantic-guess.
+- [ ] Đồng ý source fail không được mở rộng search scope.
 - [ ] Đồng ý QueryPlan.
 - [ ] Đồng ý Capability abstraction.
 - [ ] Đồng ý structured/current source.
@@ -744,6 +879,6 @@ citations
 - [ ] Đồng ý citation/provenance.
 - [ ] Đồng ý no-match semantics.
 
-## 48. Next Step
+## 49. Next Step
 
 Sau khi file này REVIEWED, review `02-ingestion-indexing-flow.md`, rồi mới bắt đầu Component Design.
