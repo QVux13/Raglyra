@@ -1,24 +1,54 @@
 # 03-nen-tang-chung — Platform Foundation
 
-> Status: PLANNED
+> **Status:** DRAFT
+> **Dịch nghĩa:** Nền tảng dùng chung cho toàn bộ Raglyra.
 
-Folder nay chua cac thiet ke dung chung cho **ca luong hoi-dap va luong nap tri thuc**.
+Folder này chứa những chức năng **không thuộc riêng Query Pipeline hay Knowledge Pipeline**, mà bao quanh cả hai.
 
-Du kien chi co mot so file chinh:
+## 1. File hiện tại
 
 ~~~text
-multi-tenant-security.md
+pham-vi-du-lieu-va-bao-mat.md
+~~~
+
+File này chốt:
+- tenant isolation;
+- assistant/dataset/source scope;
+- ACL;
+- backend filtering;
+- revocation;
+- prompt injection boundary;
+- cache/citation privacy.
+
+## 2. Các file sẽ thiết kế sau
+
+~~~text
 provider-abstraction.md
 evaluation-observability.md
 configuration.md
 ~~~
 
-## Y nghia
+### Provider Abstraction
 
-- **Multi-tenant** = nhieu khach hang/tenant dung chung platform nhung data phai cach ly.
-- **Security** = xac thuc, phan quyen, scope, secret, revocation.
-- **Provider Abstraction** = interface chung de thay LLM/Embedding/Vector Store/provider ma core flow khong phai viet lai.
-- **Evaluation** = do chat luong cua RAG.
-- **Observability** = log/trace/metric de biet request dang sai/cham o buoc nao.
+Lớp giao diện chung để thay:
+- LLM provider;
+- Embedding provider;
+- Reranker;
+- OCR;
+- VectorStore.
 
-Folder nay se duoc thiet ke sau khi hai luong chinh da REVIEWED.
+### Evaluation
+
+Đo Raglyra có trả đúng không.
+
+### Observability
+
+Theo dõi request chạy qua bước nào, chậm/sai ở đâu.
+
+### Configuration
+
+Quản lý profile, feature flags, thresholds và environment-level config.
+
+## 3. Khi nào đi sâu folder này?
+
+Sau khi Query Pipeline và Knowledge Pipeline đã REVIEWED ở mức flow.
