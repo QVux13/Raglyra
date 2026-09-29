@@ -1,141 +1,185 @@
-# Raglyra — Ban do tai lieu
+# Raglyra — Bản đồ tài liệu
 
-> Branch thiet ke: `planning`
+> **Branch thiết kế:** `planning`
 >
-> Muc tieu cua cay `docs/`: nhin ten folder la biet **phan nao cua he thong RAG** dang duoc mo ta.
+> Mục tiêu của cây `docs/`: nhìn tên folder và tên file là biết **nó đại diện cho chức năng nào của hệ thống RAG**.
 
-## 1. Cau truc don gian
+## 1. Cây tài liệu hiện tại
 
 ~~~text
 docs/
 ├── 00-tong-quan/
+│   ├── kien-truc-tong-the.md
+│   ├── lo-trinh-thiet-ke.md
+│   └── quy-tac-viet-tai-lieu.md
+│
 ├── 01-luong-hoi-dap/
+│   ├── luong-xu-ly-cau-hoi.md
+│   └── intent-va-pham-vi-cau-hoi.md
+│
 ├── 02-luong-nap-tri-thuc/
+│   └── luong-nap-va-danh-chi-muc.md
+│
 ├── 03-nen-tang-chung/
+│   ├── README.md
+│   └── pham-vi-du-lieu-va-bao-mat.md
+│
 └── 04-trien-khai/
+    └── README.md
 ~~~
 
-## 2. Y nghia tung folder
+## 2. 00-tong-quan — Overall / Tổng quan
 
-### 00-tong-quan — Overall / Tong quan he thong
+Không phải chức năng runtime.
 
-Day la noi de hieu Raglyra tu tren xuong.
+Đây là **bản đồ toàn dự án**.
 
-No tra loi:
-- Raglyra la gi?
-- RAG trong du an nay chay theo kien truc nao?
-- Co bao nhieu luong lon?
-- Tai lieu nao nen doc truoc/sau?
-- Quy tac viet tai lieu la gi?
+- `kien-truc-tong-the.md`: toàn bộ Raglyra gồm những khối nào và hai pipeline lớn chạy ra sao.
+- `lo-trinh-thiet-ke.md`: thứ tự nên thiết kế từ kiến trúc tới code.
+- `quy-tac-viet-tai-lieu.md`: quy chuẩn bắt buộc để mọi doc đủ chi tiết và dễ học.
 
-Khong di sau vao tung class/API/DB.
+Đọc folder này trước.
 
-### 01-luong-hoi-dap — Query Pipeline / Luong xu ly khi user hoi
+## 3. 01-luong-hoi-dap — Query Pipeline / Luồng xử lý câu hỏi
 
-Folder nay dai dien cho **chuc nang runtime khi user chat**.
-
-No bao phu:
+Đại diện cho **chức năng khi user chat với Raglyra**.
 
 ~~~text
 User Message
-→ Conversation Context
+→ Conversation
+→ Intent / Scope
 → Query Understanding
-→ Routing / QueryPlan
+→ QueryPlan
 → Retrieval / Structured Source
 → Evidence
 → Answer
 → Citation
 ~~~
 
-Moi file chi tiet ve conversation, routing, retrieval, answering sau nay se nam trong folder nay de ban khong phai nhay qua nhieu folder.
+### luong-xu-ly-cau-hoi.md
 
-### 02-luong-nap-tri-thuc — Knowledge Pipeline / Luong dua du lieu vao RAG
+File end-to-end.
 
-Folder nay dai dien cho **chuc nang nap va chuan bi knowledge**.
+Giải thích toàn bộ từ lúc user gửi message tới lúc nhận answer.
 
-No bao phu:
+### intent-va-pham-vi-cau-hoi.md
+
+File chuyên sâu về:
+- Intent = user muốn hệ thống làm loại việc gì.
+- Topic = user đang hỏi chủ đề nào.
+- Capability = hệ thống cần khả năng nào để xử lý.
+- Source = nguồn dữ liệu cụ thể.
+- Scope = phạm vi dữ liệu/chức năng được phép.
+
+File này đặc biệt quan trọng để tránh query mơ hồ hoặc prompt injection làm hệ thống search sang dữ liệu khác ngoài phạm vi.
+
+## 4. 02-luong-nap-tri-thuc — Knowledge Pipeline / Luồng nạp tri thức
+
+Đại diện cho **chức năng đưa dữ liệu vào RAG**.
 
 ~~~text
-File / Web / API / Data Source
+Source
 → Parse / OCR
-→ Chuan hoa
+→ Canonical Artifact
+→ Region
 → Chunk / Structured Record
 → Embedding / Index
-→ San sang cho Retrieval
+→ Active Knowledge
 ~~~
 
-Moi file chi tiet ve parser, chunking, indexing, versioning sau nay se nam o day.
+### luong-nap-va-danh-chi-muc.md
 
-### 03-nen-tang-chung — Platform Foundation / Nen tang dung chung
+Giải thích toàn bộ:
+- file/web/API snapshot vào hệ thống thế nào;
+- parser/OCR;
+- chunking;
+- KnowledgeUnit;
+- StructuredRecord;
+- vector/lexical index;
+- versioning;
+- scope/ACL metadata;
+- atomic activation.
 
-Folder nay chua cac chuc nang **bao quanh ca Query Pipeline va Knowledge Pipeline**.
+## 5. 03-nen-tang-chung — Platform Foundation / Nền tảng dùng chung
 
-Vi du:
-- Multi-tenant = mot he thong phuc vu nhieu khach hang nhung phai cach ly data.
-- Security = quyen truy cap, scope, token, secret.
-- Provider Abstraction = lop trung gian de doi OpenAI/Gemini/Qwen/Qdrant/pgvector ma core it bi anh huong.
-- Evaluation = do chat luong RAG.
-- Observability = theo doi he thong dang chay ra sao.
+Không phải một bước đơn lẻ trong flow.
 
-Day khong phai mot buoc duy nhat trong flow; no la nen tang dung chung cho toan bo he thong.
+Nó bao quanh cả Query Pipeline và Knowledge Pipeline.
 
-### 04-trien-khai — Implementation Design / Thiet ke de bien kien truc thanh code
+### pham-vi-du-lieu-va-bao-mat.md
 
-Folder nay chi duoc di sau sau khi 3 phan tren da ro.
+Giải thích:
+- Multi-tenant = nhiều khách hàng dùng chung platform nhưng dữ liệu phải cách ly.
+- Security Scope = request được phép xem gì.
+- Assistant/Dataset/Source Scope.
+- ACL.
+- backend filtering.
+- revocation.
+- prompt injection boundary.
+- cache scope.
+- citation privacy.
 
-No se chua:
-- Data Model / ERD = thiet ke bang DB va quan he.
-- API = request/response/sequence tung endpoint.
-- UI = man hinh va flow thao tac.
-- Infrastructure = PostgreSQL, Qdrant/pgvector, Redis, Object Storage, deployment.
-- Testing = test component, integration, performance.
-- Migration = tan dung/chuyen tu code cu neu can.
-- Tasks = task chi tiet de AI/dev code.
+Sau này folder này còn có provider abstraction, evaluation/observability và configuration.
 
-## 3. Cach doc tai lieu
+## 6. 04-trien-khai — Implementation Design / Thiết kế để code
 
-Thu tu:
+Chỉ dùng sau khi architecture + flow + component đủ rõ.
+
+Sẽ chứa:
+- Data Model / ERD.
+- API.
+- UI.
+- Infrastructure.
+- Testing.
+- Migration.
+- Task cho AI/dev.
+
+## 7. Thứ tự nên đọc
 
 ~~~text
 00-tong-quan/kien-truc-tong-the.md
         ↓
 01-luong-hoi-dap/luong-xu-ly-cau-hoi.md
         ↓
+01-luong-hoi-dap/intent-va-pham-vi-cau-hoi.md
+        ↓
 02-luong-nap-tri-thuc/luong-nap-va-danh-chi-muc.md
         ↓
-03-nen-tang-chung/
-        ↓
-04-trien-khai/
+03-nen-tang-chung/pham-vi-du-lieu-va-bao-mat.md
 ~~~
 
-## 4. Quy tac version
+Sau khi năm file này REVIEWED mới đi sâu component.
 
-Trong cay docs chi giu **mot file hien tai cho moi chu de**.
+## 8. Quy tắc version
 
-Khong tao:
-- file-v0.1.md
-- file-v0.2.md
-- file-self-review.md
+Trong cây docs chỉ giữ **một file hiện tại cho mỗi chủ đề**.
 
-Khi cap nhat:
-- sua chinh file hien tai;
-- Git commit/history giu lich su cu;
-- cay docs luon chi hien ban moi nhat.
+Không tạo:
 
-## 5. Quy tac trang thai
+~~~text
+file-v0.1.md
+file-v0.2.md
+file-self-review.md
+~~~
 
-Moi file co the co:
-- DRAFT = dang thiet ke.
-- REVIEWED = da review, co the lam dependency cho phan sau.
-- APPROVED = da chot de implementation.
+Khi cập nhật:
+- sửa file hiện tại;
+- Git commit/history giữ bản cũ;
+- cây docs luôn chỉ hiển thị bản mới nhất.
 
-## 6. Nguyen tac quan trong
+## 9. Trạng thái tài liệu
 
-Kien truc RAG target quyet dinh code.
+- **DRAFT** = đang thiết kế.
+- **REVIEWED** = đã review kỹ, dùng được làm dependency.
+- **APPROVED** = đã chốt để implementation.
 
-Source code cu chi duoc xem la nguon de:
-- tai su dung ham/module tot;
-- rut ngan implementation;
-- tham khao behavior hien tai.
+## 10. Nguyên tắc kiến trúc
 
-Khong de legacy code ep kien truc moi di theo loi cu.
+Kiến trúc target quyết định code.
+
+Legacy/source code cũ chỉ dùng để:
+- tái sử dụng implementation tốt;
+- tham khảo behavior;
+- rút ngắn thời gian code.
+
+Không để code cũ ép kiến trúc mới đi theo lỗi cũ.
