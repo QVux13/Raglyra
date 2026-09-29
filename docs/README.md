@@ -2,53 +2,63 @@
 
 > **Branch thiết kế:** `planning`
 >
-> Mục tiêu của cây `docs/`: nhìn tên folder và tên file là biết **nó đại diện cho chức năng nào của hệ thống RAG**.
+> Mục tiêu: nhìn tên folder và version là biết **phần nào của RAG đang được mô tả** và **bản nào là LATEST**.
 
-## 1. Cây tài liệu hiện tại
+## 1. Cây tài liệu chính
 
 ~~~text
 docs/
 ├── 00-tong-quan/
-│   ├── kien-truc-tong-the.md
+│   ├── kien-truc-tong-the-v1.md
+│   ├── kien-truc-tong-the-v2.md              ← LATEST
+│   ├── review-kien-truc-v1.md
 │   ├── lo-trinh-thiet-ke.md
 │   └── quy-tac-viet-tai-lieu.md
 │
 ├── 01-luong-hoi-dap/
-│   ├── luong-xu-ly-cau-hoi.md
-│   └── intent-va-pham-vi-cau-hoi.md
+│   ├── luong-xu-ly-cau-hoi-v1.md
+│   ├── luong-xu-ly-cau-hoi-v2.md             ← LATEST
+│   ├── intent-va-pham-vi-cau-hoi-v1.md
+│   ├── intent-va-pham-vi-cau-hoi-v2.md       ← LATEST
+│   ├── conversation-engine-v1.md              ← component detail
+│   └── routing-query-plan-v1.md               ← component detail
 │
 ├── 02-luong-nap-tri-thuc/
-│   └── luong-nap-va-danh-chi-muc.md
+│   ├── luong-nap-va-danh-chi-muc-v1.md
+│   └── luong-nap-va-danh-chi-muc-v2.md        ← LATEST
 │
 ├── 03-nen-tang-chung/
-│   ├── README.md
-│   └── pham-vi-du-lieu-va-bao-mat.md
+│   ├── pham-vi-du-lieu-va-bao-mat-v1.md
+│   ├── pham-vi-du-lieu-va-bao-mat-v2.md      ← LATEST
+│   └── README.md
 │
 └── 04-trien-khai/
     └── README.md
 ~~~
 
-## 2. 00-tong-quan — Overall / Tổng quan
+## 2. Ý nghĩa từng folder
+
+### 00-tong-quan — Overall / Tổng quan
 
 Không phải chức năng runtime.
 
-Đây là **bản đồ toàn dự án**.
+Dùng để hiểu:
+- Raglyra là gì;
+- toàn hệ thống có những khối nào;
+- Query Pipeline và Knowledge Pipeline nối nhau ra sao;
+- bản thiết kế nào đang là latest;
+- thứ tự đọc/tổ chức docs.
 
-- `kien-truc-tong-the.md`: toàn bộ Raglyra gồm những khối nào và hai pipeline lớn chạy ra sao.
-- `lo-trinh-thiet-ke.md`: thứ tự nên thiết kế từ kiến trúc tới code.
-- `quy-tac-viet-tai-lieu.md`: quy chuẩn bắt buộc để mọi doc đủ chi tiết và dễ học.
+### 01-luong-hoi-dap — Query Pipeline / Luồng xử lý câu hỏi
 
-Đọc folder này trước.
-
-## 3. 01-luong-hoi-dap — Query Pipeline / Luồng xử lý câu hỏi
-
-Đại diện cho **chức năng khi user chat với Raglyra**.
+Đại diện cho toàn bộ runtime khi user chat:
 
 ~~~text
 User Message
 → Conversation
-→ Intent / Scope
 → Query Understanding
+→ Entity Resolution
+→ Capability / Scope Validation
 → QueryPlan
 → Retrieval / Structured Source
 → Evidence
@@ -56,126 +66,92 @@ User Message
 → Citation
 ~~~
 
-### luong-xu-ly-cau-hoi.md
+### 02-luong-nap-tri-thuc — Knowledge Pipeline / Luồng nạp tri thức
 
-File end-to-end.
-
-Giải thích toàn bộ từ lúc user gửi message tới lúc nhận answer.
-
-### intent-va-pham-vi-cau-hoi.md
-
-File chuyên sâu về:
-- Intent = user muốn hệ thống làm loại việc gì.
-- Topic = user đang hỏi chủ đề nào.
-- Capability = hệ thống cần khả năng nào để xử lý.
-- Source = nguồn dữ liệu cụ thể.
-- Scope = phạm vi dữ liệu/chức năng được phép.
-
-File này đặc biệt quan trọng để tránh query mơ hồ hoặc prompt injection làm hệ thống search sang dữ liệu khác ngoài phạm vi.
-
-## 4. 02-luong-nap-tri-thuc — Knowledge Pipeline / Luồng nạp tri thức
-
-Đại diện cho **chức năng đưa dữ liệu vào RAG**.
+Đại diện cho cách đưa dữ liệu vào RAG:
 
 ~~~text
 Source
+→ Sync / Version
 → Parse / OCR
 → Canonical Artifact
-→ Region
-→ Chunk / Structured Record
-→ Embedding / Index
-→ Active Knowledge
+→ Region / Chunk
+→ KnowledgeUnit / StructuredRecord
+→ Embedding / Lexical Index
+→ Active Generation
 ~~~
 
-### luong-nap-va-danh-chi-muc.md
+### 03-nen-tang-chung — Platform Foundation / Nền tảng dùng chung
 
-Giải thích toàn bộ:
-- file/web/API snapshot vào hệ thống thế nào;
-- parser/OCR;
-- chunking;
-- KnowledgeUnit;
-- StructuredRecord;
-- vector/lexical index;
-- versioning;
-- scope/ACL metadata;
-- atomic activation.
+Bao quanh cả hai pipeline:
+- multi-tenant;
+- security;
+- provider abstraction;
+- evaluation;
+- observability;
+- configuration.
 
-## 5. 03-nen-tang-chung — Platform Foundation / Nền tảng dùng chung
+### 04-trien-khai — Implementation Design / Thiết kế để code
 
-Không phải một bước đơn lẻ trong flow.
+Chỉ đi xuống sau khi component design đủ rõ:
+- Data Model / ERD;
+- API;
+- UI;
+- Infrastructure;
+- Testing;
+- Migration;
+- Implementation Tasks.
 
-Nó bao quanh cả Query Pipeline và Knowledge Pipeline.
-
-### pham-vi-du-lieu-va-bao-mat.md
-
-Giải thích:
-- Multi-tenant = nhiều khách hàng dùng chung platform nhưng dữ liệu phải cách ly.
-- Security Scope = request được phép xem gì.
-- Assistant/Dataset/Source Scope.
-- ACL.
-- backend filtering.
-- revocation.
-- prompt injection boundary.
-- cache scope.
-- citation privacy.
-
-Sau này folder này còn có provider abstraction, evaluation/observability và configuration.
-
-## 6. 04-trien-khai — Implementation Design / Thiết kế để code
-
-Chỉ dùng sau khi architecture + flow + component đủ rõ.
-
-Sẽ chứa:
-- Data Model / ERD.
-- API.
-- UI.
-- Infrastructure.
-- Testing.
-- Migration.
-- Task cho AI/dev.
-
-## 7. Thứ tự nên đọc
+## 3. LATEST hiện tại
 
 ~~~text
-00-tong-quan/kien-truc-tong-the.md
-        ↓
-01-luong-hoi-dap/luong-xu-ly-cau-hoi.md
-        ↓
-01-luong-hoi-dap/intent-va-pham-vi-cau-hoi.md
-        ↓
-02-luong-nap-tri-thuc/luong-nap-va-danh-chi-muc.md
-        ↓
-03-nen-tang-chung/pham-vi-du-lieu-va-bao-mat.md
+System Architecture       → kien-truc-tong-the-v2.md
+Query Flow                → luong-xu-ly-cau-hoi-v2.md
+Intent / Scope            → intent-va-pham-vi-cau-hoi-v2.md
+Ingestion / Indexing      → luong-nap-va-danh-chi-muc-v2.md
+Data Scope / Security     → pham-vi-du-lieu-va-bao-mat-v2.md
 ~~~
 
-Sau khi năm file này REVIEWED mới đi sâu component.
+Implementation và review mới phải dùng LATEST, trừ khi đang so sánh lịch sử.
 
-## 8. Quy tắc version
+## 4. Quy tắc version
 
-Trong cây docs chỉ giữ **một file hiện tại cho mỗi chủ đề**.
+Version mới phải **self-contained**.
 
-Không tạo:
+Ví dụ `v2` phải chứa:
+- toàn bộ nội dung v1 còn hiệu lực;
+- nội dung sửa đổi đặt đúng vị trí;
+- không yêu cầu người đọc mở v1 để ghép logic.
+
+Version cũ được freeze để so sánh lịch sử.
+
+## 5. Thứ tự nên đọc
 
 ~~~text
-file-v0.1.md
-file-v0.2.md
-file-self-review.md
+00-tong-quan/kien-truc-tong-the-v2.md
+        ↓
+01-luong-hoi-dap/luong-xu-ly-cau-hoi-v2.md
+        ↓
+01-luong-hoi-dap/intent-va-pham-vi-cau-hoi-v2.md
+        ↓
+02-luong-nap-tri-thuc/luong-nap-va-danh-chi-muc-v2.md
+        ↓
+03-nen-tang-chung/pham-vi-du-lieu-va-bao-mat-v2.md
+        ↓
+01-luong-hoi-dap/conversation-engine-v1.md
+        ↓
+01-luong-hoi-dap/routing-query-plan-v1.md
 ~~~
 
-Khi cập nhật:
-- sửa file hiện tại;
-- Git commit/history giữ bản cũ;
-- cây docs luôn chỉ hiển thị bản mới nhất.
-
-## 9. Trạng thái tài liệu
+## 6. Trạng thái tài liệu
 
 - **DRAFT** = đang thiết kế.
-- **REVIEWED** = đã review kỹ, dùng được làm dependency.
-- **APPROVED** = đã chốt để implementation.
+- **REVIEWED** = đã self-review đủ để làm dependency.
+- **APPROVED** = đã được chốt để implementation.
 
-## 10. Nguyên tắc kiến trúc
+## 7. Nguyên tắc kiến trúc
 
-Kiến trúc target quyết định code.
+Kien trúc target quyết định code.
 
 Legacy/source code cũ chỉ dùng để:
 - tái sử dụng implementation tốt;
