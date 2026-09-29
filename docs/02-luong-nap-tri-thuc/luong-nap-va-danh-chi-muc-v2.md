@@ -101,7 +101,7 @@ Mục đích:
 - rollback;
 - citation chính xác.
 
-## 5. Source Synchronization va Idempotency
+## 6. Source Synchronization va Idempotency
 
 ### Source Synchronization
 
@@ -716,7 +716,7 @@ Không để vector point trở thành dữ liệu "mồ côi" không còn biế
 Chi tiết security contract nằm tại:
 
 ~~~text
-docs/03-nen-tang-chung/pham-vi-du-lieu-va-bao-mat.md
+docs/03-nen-tang-chung/pham-vi-du-lieu-va-bao-mat-v2.md
 ~~~
 
 ## 35. AI Enrichment
@@ -829,7 +829,7 @@ sparse search
 
 Vector và lexical là hai index logical khác nhau.
 
-## 40. Embedding Profile Compatibility
+## 41. Embedding Profile Compatibility
 
 **Embedding Profile** = cấu hình xác định embedding provider/model/dimension/tokenizer/serializer version dùng cho một generation.
 
@@ -858,7 +858,7 @@ Không so raw cosine score giữa hai embedding model khác nhau.
 
 Đây là lý do IndexGeneration phải bind chính xác EmbeddingProfile.
 
-## 41. Version Layers
+## 42. Version Layers
 
 Không dùng một document_version cho mọi thứ.
 
@@ -875,7 +875,7 @@ IndexGeneration
 ActiveGeneration
 ~~~
 
-## 42. Vì sao cần nhiều version layer?
+## 43. Vì sao cần nhiều version layer?
 
 Đổi parser:
 
@@ -904,7 +904,7 @@ không cần parse/chunk lại nếu unit compatible
 → build vector generation ở backend mới
 ~~~
 
-## 43. Index Generation
+## 44. Index Generation
 
 **IndexGeneration** = bộ index hoàn chỉnh ứng với một tập source/profile/version.
 
@@ -919,7 +919,7 @@ build new generation
 → old generation remains rollback candidate
 ~~~
 
-## 44. Active Generation Manifest
+## 45. Active Generation Manifest
 
 **Active Generation Manifest** = pointer logic tới toàn bộ generation đang active và tương thích với nhau.
 
@@ -949,7 +949,7 @@ metadata v3
 
 bị trộn ngoài chủ ý.
 
-## 45. Atomic Activation
+## 46. Atomic Activation
 
 **Atomic Activation** = chuyển bộ generation mới thành active một cách nhất quán.
 
@@ -963,7 +963,7 @@ metadata v1
 
 trong cùng request.
 
-## 46. Checkpoint / Resume
+## 47. Checkpoint / Resume
 
 Job ingestion phải resume được.
 
@@ -982,7 +982,7 @@ activated
 
 Nếu batch embedding 7/10 fail thì retry batch 7, không chạy lại toàn PDF.
 
-## 47. Retry / Backpressure
+## 48. Retry / Backpressure
 
 Cần hỗ trợ:
 
@@ -998,7 +998,7 @@ backpressure
 
 **Backpressure** = cơ chế giảm tốc độ nhận việc khi downstream đang quá tải.
 
-## 48. Lifecycle
+## 49. Lifecycle
 
 Processing state:
 
@@ -1028,7 +1028,7 @@ DELETED
 
 Hai state machine khác nhau.
 
-## 49. Revocation
+## 50. Revocation
 
 Source bị revoke:
 
@@ -1040,13 +1040,13 @@ stop retrieval immediately
 
 Không chờ vector delete xong mới chặn query.
 
-## 50. Duplicate Handling
+## 51. Duplicate Handling
 
 Exact duplicate có thể dùng content hash.
 
 Near duplicate không nên auto-delete vì provenance/permission có thể khác.
 
-## 51. Chunking Evaluation
+## 52. Chunking Evaluation
 
 Chunking phải benchmark bằng downstream retrieval.
 
@@ -1066,7 +1066,7 @@ Cost
 
 Không chọn chunk size chỉ vì nhìn chunk đẹp.
 
-## 52. Case — Policy PDF
+## 53. Case — Policy PDF
 
 ~~~text
 policy.pdf
@@ -1083,7 +1083,7 @@ policy.pdf
 
 User query sau này retrieve child, expand parent section và cite page/section.
 
-## 53. Case — XLSX Pricing Snapshot
+## 54. Case — XLSX Pricing Snapshot
 
 ~~~text
 pricing.xlsx
@@ -1097,7 +1097,7 @@ pricing.xlsx
 
 Nếu có live Pricing API, current-price query vẫn ưu tiên API.
 
-## 54. Case — Scanned PDF
+## 55. Case — Scanned PDF
 
 ~~~text
 scan.pdf
@@ -1110,7 +1110,7 @@ scan.pdf
 → index
 ~~~
 
-## 55. Component Responsibilities
+## 56. Component Responsibilities
 
 | Component | Trách nhiệm |
 |---|---|
@@ -1130,7 +1130,7 @@ scan.pdf
 | Generation Manager | build/activate generations |
 | Job Manager | checkpoint/retry |
 
-## 56. Advanced Knowledge Structures — không phải baseline V1
+## 57. Advanced Knowledge Structures — không phải baseline V1
 
 Các kỹ thuật như:
 - Knowledge Graph;
@@ -1150,7 +1150,7 @@ Raglyra không đưa chúng vào baseline V1 vì:
 
 Core architecture phải chừa extension point nhưng không phụ thuộc các kỹ thuật này.
 
-## 57. File này không mô tả
+## 58. File này không mô tả
 
 - Query Understanding;
 - Routing;
@@ -1160,7 +1160,7 @@ Core architecture phải chừa extension point nhưng không phụ thuộc các
 - UI;
 - provider/model cuối cùng.
 
-## 58. Design Decisions
+## 59. Design Decisions
 
 1. Source khác SourceItem và SourceVersion.
 2. Source sync + change detection là first-class.
@@ -1183,7 +1183,7 @@ Core architecture phải chừa extension point nhưng không phụ thuộc các
 19. Chunking phải evaluation.
 20. Graph/advanced knowledge structures là optional extension, không baseline.
 
-## 59. Open Questions
+## 60. Open Questions
 
 - default parser stack;
 - OCR provider;
@@ -1196,7 +1196,7 @@ Core architecture phải chừa extension point nhưng không phụ thuộc các
 - exact quality thresholds;
 - source sync scheduler.
 
-## 60. Review Checklist
+## 61. Review Checklist
 
 - [ ] Hiểu Source/SourceItem/SourceVersion.
 - [ ] Đồng ý Canonical Artifact.
@@ -1209,7 +1209,7 @@ Core architecture phải chừa extension point nhưng không phụ thuộc các
 - [ ] Đồng ý atomic generation activation.
 - [ ] Đồng ý chunking evaluation.
 
-## 61. Next Step
+## 62. Next Step
 
 Sau khi Query Flow và Ingestion Flow đều REVIEWED:
 
