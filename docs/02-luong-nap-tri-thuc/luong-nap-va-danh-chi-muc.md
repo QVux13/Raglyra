@@ -566,7 +566,69 @@ effective date
 provenance
 ~~~
 
-## 32. AI Enrichment
+## 32. Metadata phạm vi truy cập
+
+Ngay từ Ingestion, mỗi artifact có khả năng được retrieval phải mang metadata phạm vi.
+
+Tối thiểu:
+
+~~~text
+tenant_id
+workspace_id
+dataset_id
+source_id
+source_version_id
+visibility
+ACL / sensitivity
+lifecycle_status
+~~~
+
+**ACL — Access Control List** = quy tắc xác định ai hoặc nhóm nào được phép truy cập dữ liệu.
+
+Mục tiêu:
+
+> Retrieval có thể filter đúng ngay tại VectorStore/LexicalStore/Database, thay vì search rộng rồi mới lọc bằng Python.
+
+Ví dụ một KnowledgeUnit của Tenant A phải được index cùng:
+
+~~~text
+tenant_id = A
+dataset_id = policy
+source_id = policy-001
+visibility = ACTIVE
+~~~
+
+Khi Tenant B query, backend filter phải loại unit này trước ranking.
+
+### Scope inheritance
+
+Phạm vi phải được kế thừa theo chuỗi:
+
+~~~text
+Source
+→ SourceVersion
+→ Region
+→ KnowledgeUnit / StructuredRecord
+→ Vector/Lexical index point
+~~~
+
+Nếu source bị revoke:
+
+~~~text
+source lifecycle = REVOKED
+→ unit/index visibility bị chặn
+→ physical cleanup có thể chạy sau
+~~~
+
+Không để vector point trở thành dữ liệu "mồ côi" không còn biết thuộc source/tenant nào.
+
+Chi tiết security contract nằm tại:
+
+~~~text
+docs/03-nen-tang-chung/pham-vi-du-lieu-va-bao-mat.md
+~~~
+
+## 33. AI Enrichment
 
 Optional:
 
@@ -586,7 +648,7 @@ MODEL_DERIVED
 
 Không nhầm với source fact.
 
-## 33. Quality Gate
+## 34. Quality Gate
 
 Kiểm unit/artifact trước index.
 
@@ -604,7 +666,7 @@ Blocking examples:
 - broken table schema;
 - index count mismatch.
 
-## 34. Coverage Validation
+## 35. Coverage Validation
 
 Phải biết content nào:
 
@@ -626,7 +688,7 @@ duplicate ratio
 
 Không silently drop content.
 
-## 35. Embedding Pipeline
+## 36. Embedding Pipeline
 
 ~~~text
 KnowledgeUnit
@@ -640,7 +702,7 @@ KnowledgeUnit
 
 **EmbeddingProvider** = abstraction cho model embedding.
 
-## 36. VectorStore
+## 37. VectorStore
 
 Interface logic:
 
@@ -662,7 +724,7 @@ QdrantVectorStore
 
 Ingestion core không biết backend implementation.
 
-## 37. Lexical Index
+## 38. Lexical Index
 
 Lexical Index dùng cho keyword/full-text retrieval.
 
@@ -676,7 +738,7 @@ sparse search
 
 Vector và lexical là hai index logical khác nhau.
 
-## 38. Version Layers
+## 39. Version Layers
 
 Không dùng một document_version cho mọi thứ.
 
@@ -693,7 +755,7 @@ IndexGeneration
 ActiveGeneration
 ~~~
 
-## 39. Vì sao cần nhiều version layer?
+## 40. Vì sao cần nhiều version layer?
 
 Đổi parser:
 
@@ -722,7 +784,7 @@ không cần parse/chunk lại nếu unit compatible
 → build vector generation ở backend mới
 ~~~
 
-## 40. Index Generation
+## 41. Index Generation
 
 **IndexGeneration** = bộ index hoàn chỉnh ứng với một tập source/profile/version.
 
@@ -737,7 +799,7 @@ build new generation
 → old generation remains rollback candidate
 ~~~
 
-## 41. Atomic Activation
+## 42. Atomic Activation
 
 **Atomic Activation** = chuyển bộ generation mới thành active một cách nhất quán.
 
@@ -751,7 +813,7 @@ metadata v1
 
 trong cùng request.
 
-## 42. Checkpoint / Resume
+## 43. Checkpoint / Resume
 
 Job ingestion phải resume được.
 
@@ -770,7 +832,7 @@ activated
 
 Nếu batch embedding 7/10 fail thì retry batch 7, không chạy lại toàn PDF.
 
-## 43. Retry / Backpressure
+## 44. Retry / Backpressure
 
 Cần hỗ trợ:
 
@@ -786,7 +848,7 @@ backpressure
 
 **Backpressure** = cơ chế giảm tốc độ nhận việc khi downstream đang quá tải.
 
-## 44. Lifecycle
+## 45. Lifecycle
 
 Processing state:
 
@@ -816,7 +878,7 @@ DELETED
 
 Hai state machine khác nhau.
 
-## 45. Revocation
+## 46. Revocation
 
 Source bị revoke:
 
@@ -828,13 +890,13 @@ stop retrieval immediately
 
 Không chờ vector delete xong mới chặn query.
 
-## 46. Duplicate Handling
+## 47. Duplicate Handling
 
 Exact duplicate có thể dùng content hash.
 
 Near duplicate không nên auto-delete vì provenance/permission có thể khác.
 
-## 47. Chunking Evaluation
+## 48. Chunking Evaluation
 
 Chunking phải benchmark bằng downstream retrieval.
 
@@ -854,7 +916,7 @@ Cost
 
 Không chọn chunk size chỉ vì nhìn chunk đẹp.
 
-## 48. Case — Policy PDF
+## 49. Case — Policy PDF
 
 ~~~text
 policy.pdf
@@ -871,7 +933,7 @@ policy.pdf
 
 User query sau này retrieve child, expand parent section và cite page/section.
 
-## 49. Case — XLSX Pricing Snapshot
+## 50. Case — XLSX Pricing Snapshot
 
 ~~~text
 pricing.xlsx
@@ -885,7 +947,7 @@ pricing.xlsx
 
 Nếu có live Pricing API, current-price query vẫn ưu tiên API.
 
-## 50. Case — Scanned PDF
+## 51. Case — Scanned PDF
 
 ~~~text
 scan.pdf
@@ -898,7 +960,7 @@ scan.pdf
 → index
 ~~~
 
-## 51. Component Responsibilities
+## 52. Component Responsibilities
 
 | Component | Trách nhiệm |
 |---|---|
@@ -918,7 +980,7 @@ scan.pdf
 | Generation Manager | build/activate generations |
 | Job Manager | checkpoint/retry |
 
-## 52. File này không mô tả
+## 53. File này không mô tả
 
 - Query Understanding;
 - Routing;
@@ -928,7 +990,7 @@ scan.pdf
 - UI;
 - provider/model cuối cùng.
 
-## 53. Design Decisions
+## 54. Design Decisions
 
 1. Source khác SourceItem và SourceVersion.
 2. SourceVersion immutable.
@@ -939,12 +1001,13 @@ scan.pdf
 7. StructuredRecord first-class.
 8. Live structured data không bắt buộc vector hóa.
 9. Provider/vector backend qua abstraction.
-10. Version layers tách.
-11. Build generation mới rồi atomic activate.
-12. Quality/Coverage bắt buộc.
-13. Chunking phải evaluation.
+10. Scope/ACL metadata được kế thừa từ Source tới index point.
+11. Version layers tách.
+12. Build generation mới rồi atomic activate.
+13. Quality/Coverage bắt buộc.
+14. Chunking phải evaluation.
 
-## 54. Open Questions
+## 55. Open Questions
 
 - default parser stack;
 - OCR provider;
@@ -957,7 +1020,7 @@ scan.pdf
 - exact quality thresholds;
 - source sync scheduler.
 
-## 55. Review Checklist
+## 56. Review Checklist
 
 - [ ] Hiểu Source/SourceItem/SourceVersion.
 - [ ] Đồng ý Canonical Artifact.
@@ -970,7 +1033,7 @@ scan.pdf
 - [ ] Đồng ý atomic generation activation.
 - [ ] Đồng ý chunking evaluation.
 
-## 56. Next Step
+## 57. Next Step
 
 Sau khi Query Flow và Ingestion Flow đều REVIEWED:
 
