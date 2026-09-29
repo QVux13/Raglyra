@@ -128,4 +128,53 @@ Phải giải thích Router là gì, Retriever nhận gì, tại sao cần bư�
 
 Không dùng source code cũ làm lý do để thay đổi architecture target.
 
-Không tách một chủ đề thành quá nhiều file version gây mất kiểm soát; dùng Git history cho lịch sử.
+## 8. Quy tắc version
+
+Raglyra **có giữ nhiều version** cho tài liệu thiết kế quan trọng, nhưng mỗi version mới phải là một tài liệu **self-contained**.
+
+Ví dụ:
+
+~~~text
+retrieval-engine-v1.md
+retrieval-engine-v2.md
+~~~
+
+### Bắt buộc
+
+1. `v2` phải đọc độc lập, không cần mở `v1`.
+2. `v2` phải chứa đầy đủ nội dung còn hiệu lực từ `v1`.
+3. Nội dung bị thay đổi phải được sửa trực tiếp trong flow tương ứng, không viết kiểu "xem v1 rồi áp thêm patch này".
+4. Version cũ sau khi superseded phải được **freeze**, không sửa tiếp trừ lỗi chính tả nghiêm trọng.
+5. README phải chỉ rõ file nào là **LATEST**.
+6. Review file nếu có chỉ dùng giải thích lý do thay đổi; implementation không được phụ thuộc review file.
+7. Tên file chưa version chỉ dùng cho governance/index file như README hoặc quy tắc viết docs.
+
+### Không được làm
+
+~~~text
+v1: flow đầy đủ
+v2: chỉ ghi "thêm Scope Guard sau bước 3"
+~~~
+
+Cách đúng:
+
+~~~text
+v2: viết lại toàn bộ flow hoàn chỉnh,
+bao gồm luôn Scope Guard ở đúng vị trí
+~~~
+
+Git history vẫn giữ lịch sử commit chi tiết; version file giữ các mốc thiết kế lớn để review/so sánh dễ hơn.
+
+## 9. Không được làm
+
+Không được viết tài liệu kiểu:
+
+~~~text
+Router → Retriever → LLM
+~~~
+
+rồi kết thúc.
+
+Phải giải thích Router là gì, Retriever nhận gì, tại sao cần bước đó, output nào được truyền tiếp và case nào minh họa.
+
+Không dùng source code cũ làm lý do để thay đổi architecture target.
