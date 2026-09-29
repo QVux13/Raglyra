@@ -73,7 +73,8 @@ flowchart LR
     U[User / Client] --> API[RAG API]
     API --> SEC[Security Context]
     SEC --> CONV[Conversation Engine]
-    CONV --> QU[Query Understanding]
+    CONV --> SCOPE[Intent & Scope Guard]
+    SCOPE --> QU[Query Understanding]
     QU --> PLAN[Query Planner]
     PLAN --> EXEC[Plan Executor]
     EXEC --> STRUCT[Structured Sources]
@@ -127,7 +128,91 @@ Nguyên tắc: Security phải được xác định trước retrieval.
 
 Không được search toàn database rồi mới filter tenant.
 
-## 6. Conversation Engine
+## 6. Scope Guard va Intent Boundary
+
+**Scope Guard** = cong kiem tra xem cau hoi co nam trong pham vi ma assistant/request duoc phep xu ly hay khong.
+
+No khong chi kiem permission theo tenant. No con kiem:
+
+~~~text
+Domain Scope
+→ assistant duoc phep noi ve linh vuc nao?
+
+Dataset Scope
+→ assistant duoc phep tim trong tap du lieu nao?
+
+Source Scope
+→ duoc phep goi API/source nao?
+
+Capability Scope
+→ duoc phep su dung kha nang nao?
+
+Action Scope
+→ duoc phep chi tra loi hay duoc phep thuc hien hanh dong?
+~~~
+
+Vi du:
+
+~~~text
+Assistant Sales
+allowed:
+- Product Knowledge
+- Pricing API
+- Refund Policy
+
+not allowed:
+- HR data
+- internal admin documents
+- another tenant data
+~~~
+
+Neu user hoi:
+
+~~~text
+"Cho toi thong tin luong nhan vien"
+~~~
+
+thi he thong phai:
+
+~~~text
+OUT_OF_SCOPE
+→ no retrieval
+→ no source expansion
+~~~
+
+khong duoc semantic search tat ca dataset chi vi tim thay document co tu "luong".
+
+### Intent Boundary
+
+**Intent** = y dinh xu ly cua user, vi du KNOWLEDGE_QA, STRUCTURED_LOOKUP, COMPARE.
+
+Intent khong co quyen mo data.
+
+Flow dung:
+
+~~~text
+Intent
+→ required capability
+→ check allowed scope
+→ source binding
+~~~
+
+Khong:
+
+~~~text
+Intent
+→ LLM tu chon source
+~~~
+
+Chi tiet taxonomy va rule nam o:
+
+~~~text
+docs/01-luong-hoi-dap/intent-va-pham-vi-cau-hoi.md
+~~~
+
+---
+
+## 7. Conversation Engine
 
 **Conversation Engine** = khối hiểu ngữ cảnh nhiều lượt chat.
 
@@ -160,7 +245,7 @@ Không phải nhiệm vụ của Conversation Engine:
 - pricing lookup;
 - tạo answer business.
 
-## 7. Query Understanding
+## 8. Query Understanding
 
 **Query Understanding** = bước phân tích câu hỏi để hiểu user muốn hệ thống làm gì.
 
@@ -185,7 +270,7 @@ freshness = CURRENT
 
 **Freshness** = mức độ mới của dữ liệu mà query yêu cầu.
 
-## 8. Query Planner
+## 9. Query Planner
 
 **Query Planner** = bộ biến kết quả Query Understanding thành kế hoạch có thể thực thi.
 
@@ -213,7 +298,7 @@ Planner quyết định **WHAT/WHERE** — làm gì và dùng nguồn nào.
 
 Retriever quyết định **HOW** — tìm như thế nào.
 
-## 9. Plan Executor
+## 10. Plan Executor
 
 **Plan Executor** = khối thực thi QueryPlan.
 
@@ -236,7 +321,7 @@ MULTI_PLAN
 
 Executor không tự classify query lại.
 
-## 10. Structured Sources
+## 11. Structured Sources
 
 **Structured Source** = nguồn dữ liệu có cấu trúc rõ và thường là nguồn chính xác cho dữ liệu exact/current.
 
@@ -248,7 +333,7 @@ Ví dụ:
 
 Ví dụ user hỏi giá realtime thì Pricing API thường phù hợp hơn vector document, vì vector snapshot có thể cũ.
 
-## 11. Retrieval Engine
+## 12. Retrieval Engine
 
 **Retrieval** = quá trình tìm dữ liệu liên quan từ knowledge đã được index.
 
@@ -268,13 +353,13 @@ Tìm chính xác mã/identifier.
 ### Hybrid Search
 **Hybrid Search** = kết hợp lexical + dense để tận dụng cả exact terms và semantic meaning.
 
-## 12. Candidate
+## 13. Candidate
 
 **Candidate** = kết quả tạm thời lấy từ retrieval lane.
 
 Candidate chưa phải evidence cuối cùng.
 
-## 13. Fusion
+## 14. Fusion
 
 **Fusion** = gộp nhiều bảng xếp hạng thành một ranking chung.
 
@@ -282,7 +367,7 @@ Baseline có thể dùng **RRF — Reciprocal Rank Fusion**.
 
 RRF gộp dựa trên thứ hạng thay vì cộng trực tiếp các score khác thang đo.
 
-## 14. Reranker
+## 15. Reranker
 
 **Reranker** = mô hình xếp hạng lại một tập candidate nhỏ để tăng precision.
 
@@ -296,7 +381,7 @@ RRF gộp dựa trên thứ hạng thay vì cộng trực tiếp các score khá
 
 **Recall** = khả năng tìm đủ các bằng chứng có liên quan.
 
-## 15. Evidence Layer
+## 16. Evidence Layer
 
 **Evidence** = candidate đã được chọn làm căn cứ trả lời.
 
@@ -315,7 +400,7 @@ retrieval trace
 
 **Provenance** = thông tin nguồn gốc của evidence.
 
-## 16. Evidence Gate
+## 17. Evidence Gate
 
 **Evidence Gate** = bước quyết định bằng chứng có đủ để trả lời hay không.
 
@@ -330,7 +415,7 @@ NEEDS_CLARIFICATION
 
 Ví dụ user hỏi so sánh A và B nhưng chỉ có evidence cho A thì phải trả PARTIAL, không cho LLM tưởng tượng B.
 
-## 17. Answer Engine
+## 18. Answer Engine
 
 Answer Engine chọn strategy phù hợp:
 
@@ -343,13 +428,13 @@ Lấy gần trực tiếp câu trả lời từ evidence.
 ### Grounded Synthesis
 LLM tổng hợp nhiều evidence nhưng phải bị giới hạn bởi evidence đã chọn.
 
-## 18. Citation Builder
+## 19. Citation Builder
 
 Citation Builder nhận provenance của Evidence và tạo citation an toàn.
 
 LLM không được tự bịa source URL.
 
-## 19. Ingestion Engine
+## 20. Ingestion Engine
 
 **Ingestion** = quá trình đưa dữ liệu vào hệ thống knowledge.
 
@@ -365,7 +450,7 @@ Source
 
 Chi tiết nằm ở `docs/01-flows/02-ingestion-indexing-flow.md`.
 
-## 20. Storage Layer
+## 21. Storage Layer
 
 ### Metadata DB
 Lưu tenant, dataset, source, source version, ingestion job, index generation, conversation metadata, profiles và trace/evaluation metadata.
@@ -385,7 +470,7 @@ VectorStore
 ### Lexical Index
 Dùng cho keyword/full-text retrieval.
 
-## 21. Evaluation & Observability
+## 22. Evaluation & Observability
 
 **Observability** = khả năng nhìn hệ thống đang chạy như thế nào.
 
@@ -402,7 +487,7 @@ Citation Accuracy
 No-answer Accuracy
 ~~~
 
-## 22. Infrastructure Abstraction
+## 23. Infrastructure Abstraction
 
 Các backend/provider phải nằm sau interface:
 
@@ -421,7 +506,7 @@ QueueBackend
 
 Mục tiêu: đổi vendor dễ, test dễ và core không coupling provider.
 
-## 23. Ví dụ end-to-end — policy query
+## 24. Ví dụ end-to-end — policy query
 
 ~~~text
 User: Nếu tôi không dùng VPS nữa thì có được hoàn tiền không?
@@ -456,7 +541,7 @@ Citation
 Response
 ~~~
 
-## 24. Ví dụ end-to-end — current price
+## 25. Ví dụ end-to-end — current price
 
 ~~~text
 User: VPS Basic một tháng bao nhiêu?
@@ -478,7 +563,7 @@ response
 
 Không cần vector search.
 
-## 25. Error Philosophy
+## 26. Error Philosophy
 
 Nếu scope không chắc thì **fail closed**.
 
@@ -492,7 +577,7 @@ NO_ANSWER / PARTIAL / CLARIFY
 
 không ép LLM trả lời.
 
-## 26. Những gì file này chưa chốt
+## 27. Những gì file này chưa chốt
 
 - DB schema;
 - exact API;
@@ -506,21 +591,23 @@ không ép LLM trả lời.
 - cache;
 - retry/timeouts.
 
-## 27. Design Decisions
+## 28. Design Decisions
 
 1. Raglyra có Knowledge Pipeline và Query Pipeline tách rõ.
-2. Conversation được xử lý trước Query Understanding.
-3. Query Planner tạo QueryPlan.
-4. Planner quyết định WHAT/WHERE; Retrieval quyết định HOW.
-5. Current structured data không mặc định lấy từ vector snapshot.
-6. Candidate khác Evidence.
-7. Evidence Gate đứng trước generation.
-8. Citation build từ provenance.
-9. Core độc lập pgvector/Qdrant/provider cụ thể.
-10. Security scope đi xuyên pipeline.
-11. Evaluation/Observability là core capability.
+2. Security Scope và Scope Guard chạy trước source selection/retrieval.
+3. Conversation được xử lý trước Query Understanding.
+4. Query Planner tạo QueryPlan.
+5. Intent không được tự mở source/capability ngoài scope.
+6. Planner quyết định WHAT/WHERE; Retrieval quyết định HOW.
+7. Current structured data không mặc định lấy từ vector snapshot.
+8. Candidate khác Evidence.
+9. Evidence Gate đứng trước generation.
+10. Citation build từ provenance.
+11. Core độc lập pgvector/Qdrant/provider cụ thể.
+12. Security scope đi xuyên pipeline.
+13. Evaluation/Observability là core capability.
 
-## 28. Review Checklist
+## 29. Review Checklist
 
 - [ ] Hiểu hai pipeline lớn.
 - [ ] Đồng ý Conversation đứng trước Query Understanding.
@@ -531,7 +618,7 @@ không ép LLM trả lời.
 - [ ] Đồng ý provider/backend abstraction.
 - [ ] Đồng ý Evaluation là first-class.
 
-## 29. Next Step
+## 30. Next Step
 
 Đọc tiếp:
 
